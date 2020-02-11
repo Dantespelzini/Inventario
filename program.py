@@ -5,13 +5,12 @@
 import sqlite3 # DATABASE
 import os      # OS
 from time import localtime, strftime
+import sys
 
 database = "database.db"
 conn = sqlite3.connect(database)
 cursor = conn.cursor()
 isdatabase = os.getcwd()
-finduser = ("SELECT * FROM `admin` WHERE `password` = ?")
-retry = str
 
 
 
@@ -24,33 +23,47 @@ def SetupDatabase():
     cursor.execute("CREATE TABLE IF NOT EXISTS `sells` (sell_time TEXT PRIMARY KEY NOT NULL, sell_product TEXT , sell_qty INTEGER, sell_price INTEGER, sell_type TEXT, sell_total INTEGER) ")
 
 def SetAdminPassword():  
-    cursor.execute("SELECT * FROM `admin` WHERE `password`")
-    print(cursor.fetchone())
-    if cursor.fetchone() == None:
+    os.system("clear")
+    cursor.execute("SELECT * FROM `admin`")
+    fetchded = cursor.fetchall()
+    if not fetchded:
         while True:
-            password = input("Ingrese una nueva contraseña para el usuario: ")
-            passwordre = input ("Ingrese denuevo la contraseña: ")
+            password = input("Ingrese una nueva contraseña para el usuario: ").lower()
+            passwordre = input ("Ingrese denuevo la contraseña: ").lower()
             if password == passwordre:
                 break
         cursor.execute("INSERT INTO `admin` (password) VALUES (?)",[(passwordre)])
         conn.commit()
-    input("algo")
 
 def Loginadmin():
 
-    while False:
-        password = input("Ingrese la contraseña: ")
-        cursor.execute(finduser,[(password)])
-        results = cursor.fetchall
+    while True:
+        os.system("clear")
+        password = input("Ingrese la contraseña: ").lower()
+        cursor.execute(("SELECT * FROM `admin` WHERE `password` = ?",[(password)]))
+        results = cursor.fetchall()
 
         if not results:
-            True
             print("Contraseña incorrecta")
             while retry.lower() != "y" or retry.lower() != "n":
                 retry = input("Desea reintentar? s/n :")
                 if retry.lower() == "n":
-                    break
-        else: False
+                    menu()
+        else:
+            False
+            return True
+
+def validatenumber(message):
+    while True:
+        try:
+            numberinputs = int(input(message))
+        except ValueError:
+            print("Ingrese un numero entero")
+            continue
+        else:
+            return numberinputs
+            break
+
 
 # MENU 
 
@@ -62,39 +75,59 @@ def menu():
         if operation == "1":
             sellsmenu()
         elif operation == "2":
-            os.system("clear")
             productmenu()
         elif operation == "0":
-            os.system("clear")
-            menu()
+            exitmenu()
 
 def sellsmenu():
     while True:
+        os.system("clear")
         print(" 1. Ingresar una venta \n 2. Ver informe de ventas \n 3. Vaciar el informe de ventas \n 0. Atras")
         operation = input("\n Ingrese el numero de la operacion deseada: ")
-        os.system("clear")
         if operation == "1":
-            os.system("clear")
             newsell()
-        elif operation == 2:
-            os.system("clear")
+        elif operation == "2":
             sellinfo()
-        elif operation == 3:
-            os.system("clear")
+        elif operation == "3":
             clearsells()
-        elif operation == 0:
+        elif operation == "0":
             menu()
 
+def exitmenu():
+    os.system("clear")
+    while True:
+        exitt = input("Desea salir s/n: ")
+        if exitt.lower() == "n":
+            menu()
+        elif exitt.lower() == "s":
+            sys.exit()
+
 def newsell():
-    #sell_time TEXT, sell_product TEXT PRIMARY KEY NOT NULL, sell_qty INTEGER, sell_price INTEGER, sell_type TEXT, sell_totalattime
+    os.system("clear")
     selltime = strftime("%d-%m-%Y %H:%M:%S", localtime())
-    productname = input("nombre del producto vendido")
-    sellquantity = input("cantidad vendida")
-    selltype = input("efectivo tarjeta de credito o debito")
-    sellprice = (cursor.execute("SELECT price_product FROM `products` WHERE name_product = ? ", [productname] ),
-    (cursor.fetchall()))
-    print(sellprice[1][0][0])
-    cursor.execute("INSERT INTO `sells` (sell_time, sell_product, sell_qty, sell_price, sell_type, sell_total) VALUES (?, ?, ?, (SELECT price_product FROM `products` WHERE name_product = ? ), ?, ?)", [selltime, productname, sellquantity, productname, selltype, (sellquantity * sellprice[1][0][0] ) ])
+    productname = input("Nombre del producto vendido: ").lower()
+    sellquantity = validatenumber("Cantidad vendida: ")
+    selltype = input("Efectivo, credito o debito: ").lower()
+    cursor.execute("UPDATE `products` SET stock_product = stock_product - ? WHERE name_product = ?", [sellquantity, productname])
+    sellprice = (cursor.execute("SELECT price_product FROM `products` WHERE name_product = ? ", [productname] ), (cursor.fetchall()))
+    cursor.execute("INSERT INTO `sells` (sell_time, sell_product, sell_qty, sell_price, sell_type, sell_total) VALUES (?, ?, ?, (SELECT price_product FROM `products` WHERE name_product = ? ), ?, ?)", [selltime, productname, sellquantity, productname, selltype, (int(sellquantity) * int(sellprice[1][0][0]) ) ])
+    conn.commit()
+
+def sellinfo():
+    os.system("clear")
+    cursor.execute("SELECT * FROM `sells` ORDER BY `sell_product`")
+    selllist = cursor.fetchall()
+    i=0
+    print("Fecha y hora"," "*13,"Producto"," "*4,"Cantidad"," "*3,"Precio unidad"," "*4,"Metodo de pago"," "*4,"Total de venta")
+    print("-"*108)
+    while i < len(selllist):
+        print(selllist[i][0]," "* (25 - len(str(selllist[i][0]))), selllist[i][1]," "* (12 - len(str(selllist[i][1]))), selllist[i][2]," "* (11 - len(str(selllist[i][2]))), selllist[i][3]," "* (17 - len(str(selllist[i][3]))), selllist[i][4]," "* (18 - len(str(selllist[i][4]))), selllist[i][5])
+        i= i + 1    
+    input("\npresione cualquier tecla")
+
+def clearsells():
+    os.system("clear")
+    cursor.execute("DELETE FROM `sells`")
     conn.commit()
 
 def productmenu(): 
@@ -122,10 +155,10 @@ def productmenu():
             menu()
 
 def newproduct():
-    nameproduct = input("ingrese el nombre: ")
-    priceproduct =input("ingrese el precio: ")
-    stockproduct = input("ingrese la cantidad: ")
     os.system("clear")
+    nameproduct = input("Ingrese el nombre: ").lower()
+    priceproduct = validatenumber("Ingrese el precio: ")
+    stockproduct = validatenumber("Iingrese la cantidad: ")
     cursor.execute("INSERT INTO `products` (name_product, price_product, stock_product) VALUES (?, ?, ?)", [nameproduct, priceproduct, stockproduct])
     conn.commit()
     menu()
@@ -135,32 +168,36 @@ def viewstock():
     cursor.execute("SELECT * FROM `products` ORDER BY `name_product`")
     productlist = cursor.fetchall()
     i=0
+    print("Producto"," "*7,"Precio"," "*4,"Cantidad en stock")
+    print("-"*47)
     while i < len(productlist):
-        print(productlist[i][0]," "* (20 - len(str(productlist[i][0]))), productlist[i][1]," "* (20 - len(str(productlist[i][1]))), productlist[i][2])
+        print(productlist[i][0]," "* (15 - len(str(productlist[i][0]))), productlist[i][1]," "* (10 - len(str(productlist[i][1]))), productlist[i][2])
         i= i + 1    
-    input("\npresione cualquier tecla")
+    input("\nPresione cualquier tecla")
 
 def delproduct():
     os.system("clear")
-    nameproduct = input("nombre del producto que desea borrar")
+    nameproduct = input("Nombre del producto que desea borrar: ").lower()
     cursor.execute("DELETE FROM `products` WHERE `name_product` = ? ", [nameproduct])
     conn.commit()
 
 def newstock():
-    nameproduct = input("nombre del producto")
-    stockproduct = input("ingrese la cantidad a agregar")
+    os.system("clear")
+    nameproduct = input("nombre del producto").lower()
+    stockproduct = validatenumber("ingrese la cantidad a agregar")
     cursor.execute("UPDATE `products` SET `stock_product` = `stock_product` + ? WHERE `name_product`= ?", [stockproduct, nameproduct])
     conn.commit()
 
 def delstock():
-    nameproduct = input("nombre del producto")
-    stockproduct = input("ingrese la cantidad a retirar")
+    os.system("clear")
+    nameproduct = input("nombre del producto").lower()
+    stockproduct = validatenumbert("ingrese la cantidad a retirar")
     cursor.execute("UPDATE `products` SET `stock_product` = `stock_product` - ? WHERE `name_product`= ?", [stockproduct, nameproduct])
     conn.commit()
 
 # BEGIN
 SetupDatabase()
-#SetAdminPassword()
+SetAdminPassword()
 menu()
 
 
