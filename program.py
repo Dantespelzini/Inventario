@@ -83,11 +83,20 @@ def validatename(message):
 def validateselltype(message):
      while True:
         typeinput = input(message).lower()
-        if typeinput == "debito" or typeinput == "credito" or typeinput == "efectivo":
+        if typeinput == "d":
+            typeinput = "Debito"
+            return typeinput
+            break
+        elif typeinput == "c":
+            typeinput = "Credito"
+            return typeinput
+            break
+        elif typeinput == "e":
+            typeinput = "Efectivo"
             return typeinput
             break
         else:
-            print("Ingrese una opcion")
+            print("Ingrese una opcion d/c/e")
 
 
 
@@ -130,8 +139,10 @@ def exitmenu():
 
 def newsell():
     os.system("clear")
+    print("Ingresar una venta")
+    print("------------------")
     selltime = strftime("%d-%m-%Y %H:%M:%S", localtime())
-    productname = validatename("Nombre del producto vendido: ").lower()
+    productname = validatename("Nombre del producto: ").lower()
     sellquantity = validatenumber("Cantidad vendida: ")
     selltype = validateselltype("Efectivo, credito o debito: ").lower()
     cursor.execute("UPDATE `products` SET stock_product = stock_product - ? WHERE name_product = ?", [sellquantity, productname])
@@ -149,7 +160,7 @@ def sellinfo():
     while i < len(selllist):
         print(selllist[i][0]," "* (25 - len(str(selllist[i][0]))), (str(selllist[i][1])).capitalize()," "* (12 - len(str(selllist[i][1]))), selllist[i][2]," "* (11 - len(str(selllist[i][2]))), selllist[i][3]," "* (17 - len(str(selllist[i][3]))), selllist[i][4]," "* (18 - len(str(selllist[i][4]))), selllist[i][5])
         i= i + 1    
-    input("\npresione cualquier tecla")
+    input("\nPresione ENTER")
 
 def clearsells():
     os.system("clear")
@@ -159,32 +170,31 @@ def clearsells():
 def productmenu(): 
     while True:
         os.system("clear")
-        print(" 1. Agregar producto \n 2. Eliminar producto \n 3. Agregar al stock \n 4. Eliminar del stock \n 5. Ver productos y stock \n 0. Atras")
+        print(" 1. Agregar producto \n 2. Eliminar producto \n 3. Agregar al stock \n 4. Eliminar del stock \n 5.Agregar propiedades del producto \n 6. Ver productos y stock \n 0. Atras")
         operation = input("\n Ingrese el numero de la operacion deseada: ")
         os.system("clear")
         if operation == "1":
-            os.system("clear")
             newproduct()
         elif operation == "2":
-            os.system("clear")
             delproduct()
         elif operation == "3":
-            os.system("clear")
             newstock()
         elif operation == "4":
-            os.system("clear")
             delstock()
         elif operation == "5":
-            os.system("clear")
+            proproduct()
+        elif operation == "6":
             viewstock()
         elif operation == "0":
             menu()
 
 def newproduct():
     os.system("clear")
-    nameproduct = input("Ingrese el nombre: ").lower()
-    priceproduct = validatenumber("Ingrese el precio: ")
-    stockproduct = validatenumber("Ingrese la cantidad: ")
+    print("Agregar producto")
+    print("----------------")
+    nameproduct = input("Nombre del producto: ").lower()
+    priceproduct = validatenumber("Precio del producto: ")
+    stockproduct = validatenumber("Cantidad del producto: ")
     cursor.execute("INSERT INTO `products` (name_product, price_product, stock_product) VALUES (?, ?, ?)", [nameproduct, priceproduct, stockproduct])
     conn.commit()
     menu()
@@ -203,21 +213,27 @@ def viewstock():
 
 def delproduct():
     os.system("clear")
-    nameproduct = validatename("Nombre del producto que desea borrar: ").lower()
+    print("Eliminar producto")
+    print("-----------------")
+    nameproduct = validatename("Nombre del producto: ").lower()
     cursor.execute("DELETE FROM `products` WHERE `name_product` = ? ", [nameproduct])
     conn.commit()
 
 def newstock():
     os.system("clear")
-    nameproduct = validatename("nombre del producto").lower()
-    stockproduct = validatenumber("ingrese la cantidad a agregar")
+    print("Agregar al stock")
+    print("-------------")
+    nameproduct = validatename("Nombre del producto: ").lower()
+    stockproduct = validatenumber("Ingrese la cantidad: ")
     cursor.execute("UPDATE `products` SET `stock_product` = `stock_product` + ? WHERE `name_product`= ?", [stockproduct, nameproduct])
     conn.commit()
 
 def delstock():
     os.system("clear")
-    nameproduct = validatename("nombre del producto").lower()
-    stockproduct = validatenumbert("ingrese la cantidad a retirar")
+    print("Eliminar del stock")
+    print("--------------")
+    nameproduct = validatename("Nombre del producto: ").lower()
+    stockproduct = validatenumber("Ingrese la cantidad: ")
     cursor.execute("UPDATE `products` SET `stock_product` = `stock_product` - ? WHERE `name_product`= ?", [stockproduct, nameproduct])
     conn.commit()
 
