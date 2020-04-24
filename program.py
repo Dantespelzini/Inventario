@@ -19,7 +19,6 @@ def SetupDatabase():
         f = open(database,"w")
         f.close
     cursor.execute("CREATE TABLE IF NOT EXISTS `admin` (password TEXT PRIMARY KEY NOT NULL)")
-    cursor.execute("CREATE TABLE IF NOT EXISTS `products` (name_product TEXT PRIMARY KEY NOT NULL, price_product INTEGER, stock_product INTEGER)")
     cursor.execute("CREATE TABLE IF NOT EXISTS `sells` (sell_time TEXT PRIMARY KEY NOT NULL, sell_product TEXT , sell_qty INTEGER, sell_price INTEGER, sell_type TEXT, sell_total INTEGER) ")
 
 def SetAdminPassword():  
@@ -106,27 +105,31 @@ def menu():
     while True:
         os.system("clear")
         print(" 1. Ventas \n 2. Productos y Stock \n 0. Salir")
-        operation = input("\n Ingrese el numero de la operacion deseada: ")
-        if operation == "1":
+        operation = validatenumber("\nIngrese el numero de la operacion deseada: ")
+        if operation == 1:
             sellsmenu()
-        elif operation == "2":
+        elif operation == 2:
             productmenu()
-        elif operation == "0":
+        elif operation == 0:
             exitmenu()
+        else:
+            menu()
 
 def sellsmenu():
     while True:
         os.system("clear")
         print(" 1. Ingresar una venta \n 2. Ver informe de ventas \n 3. Vaciar el informe de ventas \n 0. Atras")
-        operation = input("\n Ingrese el numero de la operacion deseada: ")
-        if operation == "1":
+        operation = validatenumber("\nIngrese el numero de la operacion deseada: ")
+        if operation == 1:
             newsell()
-        elif operation == "2":
+        elif operation == 2:
             sellinfo()
-        elif operation == "3":
+        elif operation == 3:
             clearsells()
-        elif operation == "0":
+        elif operation == 0:
             menu()
+        else:
+            sellsmenu()
 
 def exitmenu():
     os.system("clear")
@@ -170,34 +173,46 @@ def clearsells():
 def productmenu(): 
     while True:
         os.system("clear")
-        print(" 1. Agregar producto \n 2. Eliminar producto \n 3. Agregar al stock \n 4. Eliminar del stock \n 5.Agregar propiedades del producto \n 6. Ver productos y stock \n 0. Atras")
-        operation = input("\n Ingrese el numero de la operacion deseada: ")
+        print(" 1. Agregar producto \n 2. Eliminar producto \n 3. Agregar al stock \n 4. Eliminar del stock \n 5. Ver productos y stock \n 0. Atras")
+        operation = validatenumber("\n Ingrese el numero de la operacion deseada: ")
         os.system("clear")
-        if operation == "1":
+        if operation == 1:
             newproduct()
-        elif operation == "2":
+        elif operation == 2:
             delproduct()
-        elif operation == "3":
+        elif operation == 3:
             newstock()
-        elif operation == "4":
+        elif operation == 4:
             delstock()
-        elif operation == "5":
-            proproduct()
-        elif operation == "6":
+        elif operation == 5:
             viewstock()
-        elif operation == "0":
+        elif operation == 0:
             menu()
+        else:
+            productmenu()
 
 def newproduct():
     os.system("clear")
-    print("Agregar producto")
+    print("Agregar producto") 
     print("----------------")
     nameproduct = input("Nombre del producto: ").lower()
-    priceproduct = validatenumber("Precio del producto: ")
-    stockproduct = validatenumber("Cantidad del producto: ")
-    cursor.execute("INSERT INTO `products` (name_product, price_product, stock_product) VALUES (?, ?, ?)", [nameproduct, priceproduct, stockproduct])
+    cursor.execute("CREATE TABLE ?(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)", [nameproduct])
+    cursor.execute("ALTER TABLE ? ADD price_product", [nameproduct])
+    cursor.execute("ALTER TABLE ? ADD stock_product", [nameproduct])
+    productproperties()
     conn.commit()
     menu()
+
+def productproperties(nameproduct):
+    while True:
+        decision = input("Desea agregar una propiedad de producto? s/n: ")
+        if decision.lower() == "s":
+            propertyy = input("Nombre de la propiedad de producto: ")
+            cursor.execute("ALTER TABLE ? ADD ?",[nameproduct, propertyy])
+        elif decision.lower() == "n":
+            break
+            
+
 
 def viewstock():
     os.system("clear")
